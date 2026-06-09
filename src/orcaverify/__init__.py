@@ -3,7 +3,17 @@
 A drop-in, framework-agnostic verification layer for LLM/agent outputs.
 """
 
-from orcaverify.checks import Check, CheckResult, Grounded, NoPII, NoSecrets, Predicate, Schema
+from orcaverify.checks import (
+    Check,
+    CheckResult,
+    Faithful,
+    Grounded,
+    NoPII,
+    NoSecrets,
+    Predicate,
+    Rubric,
+    Schema,
+)
 from orcaverify.core import VerificationError, Verifier, verify
 from orcaverify.policy import OnFail
 from orcaverify.provenance import FileStore, InMemoryStore, Provenance
@@ -27,6 +37,8 @@ __all__ = [
     "Grounded",
     "NoPII",
     "NoSecrets",
+    "Rubric",
+    "Faithful",
     "Provenance",
     "FileStore",
     "InMemoryStore",

@@ -1,6 +1,14 @@
-from orcaverify.judges.base import Judge, PromptJudge, Verdict
+from orcaverify.judges.base import Judge, PromptJudge, Score, Verdict
 
-__all__ = ["Judge", "PromptJudge", "Verdict", "AnthropicJudge", "OpenAIJudge", "LocalJudge"]
+__all__ = [
+    "Judge",
+    "PromptJudge",
+    "Verdict",
+    "Score",
+    "AnthropicJudge",
+    "OpenAIJudge",
+    "LocalJudge",
+]
 
 
 def __getattr__(name):

@@ -71,10 +71,25 @@ How tamper is caught: edit a payload → content_hash no longer matches. Delete 
 
 Decision: hash chain only, no secret key. Tamper-EVIDENT (you see it changed), not tamper-PROOF. Simple, no key to lose. HMAC/Ed25519 = later if needed.
 
+## more checks (module 3 — rubric + faithful)
+Both reuse the Judge. Added 2 methods to PromptJudge so all real backends get them free.
+
+**checks/_text.py** — pulled `claims()` and `resolve_sources()` out of grounded.
+Why: grounded + faithful both need them. DRY. One place to improve sentence splitting later.
+
+**checks/rubric.py** — `Rubric(criteria, judge, threshold)`. Judge scores 0–1, pass if >= threshold.
+Why: this is "LLM as judge". criteria = string / list / dict. Duck-types `judge.score`; no score method → loud error.
+
+**checks/faithful.py** — `Faithful(sources, judge)`. Fails if a claim CONTRADICTS a source.
+Why: different from Grounded. Grounded = "is it backed?". Faithful = "does it clash?". A claim with no related source passes Faithful but fails Grounded.
+
+**judges/base.py** — added `score()` (parse leading float) and `contradicts()` (YES/NO).
+Why: keep one brain. Judge ABC stays minimal (entails+rewrite); these are concrete on PromptJudge so old/custom judges don't break.
+
 ## run it
 ```
 pip install -e ".[dev,local]"
 pytest -q
 python examples/rag_grounding.py
 ```
-59 tests. Core 94–100% covered. The 0% files are the real SDK adapters (need network).
+74 tests. Core 94–100% covered. The 0% files are the real SDK adapters (need network).

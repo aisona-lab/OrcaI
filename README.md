@@ -65,6 +65,8 @@ if not result.ok:
 | `Schema(Model)` | Output validates against a Pydantic model |
 | `Predicate(fn)` | Any custom rule — the universal escape hatch |
 | `Grounded(sources, judge)` | Every claim is supported by a retrieved source (cite or reject) |
+| `Faithful(sources, judge)` | No claim contradicts the sources (consistency, not just support) |
+| `Rubric(criteria, judge)` | LLM-as-judge scoring against named criteria, passes above a threshold |
 | `NoPII()` / `NoSecrets()` | Output doesn't leak personal data or credentials |
 
 ## on_fail policy
@@ -109,12 +111,14 @@ Storage is pluggable (`FileStore`, `InMemoryStore`, or your own `ProvenanceStore
 python examples/rag_grounding.py      # catches an ungrounded claim
 python examples/aml_investigation.py  # schema + grounding + no-PII gate
 python examples/audit_trail.py        # tamper-evident provenance log
+python examples/quality_checks.py     # rubric scoring + faithfulness
 ```
 
 ## Roadmap
 
-- More checks — toxicity/safety, faithfulness/consistency, rubric (LLM-judge scoring).
+- More checks — toxicity/safety, JSON-repair, custom check registry.
 - Provenance backends — Postgres/S3 stores; optional HMAC/Ed25519 signing.
+- TypeScript port.
 - Gateway mode — language-agnostic HTTP interception.
 - TypeScript port.
 

@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-import re
-
+from orcaverify.checks._text import claims, resolve_sources
 from orcaverify.checks.base import Check, CheckResult
-
-
-def _claims(text) -> list[str]:
-    # v1 claim extraction: one claim per sentence.
-    return [s.strip() for s in re.split(r"(?<=[.!?])\s+", str(text).strip()) if s.strip()]
 
 
 class Grounded(Check):
@@ -26,19 +20,13 @@ class Grounded(Check):
         self.judge = judge
         self.extract = extract
 
-    def _resolve(self, context) -> list[str]:
-        src = self.sources if self.sources is not None else context
-        if callable(src):
-            src = src()
-        return list(src) if src else []
-
     def check(self, output, context=None) -> CheckResult:
         if self.judge is None:
             raise ValueError("Grounded requires a judge (got None)")
-        sources = self._resolve(context)
+        sources = resolve_sources(self.sources, context)
         text = self.extract(output) if self.extract else output
         unsupported = [
-            claim for claim in _claims(text) if not self.judge.entails(claim, sources).supported
+            claim for claim in claims(text) if not self.judge.entails(claim, sources).supported
         ]
         if unsupported:
             return CheckResult(

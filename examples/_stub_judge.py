@@ -4,7 +4,7 @@ In real use, swap this for AnthropicJudge, OpenAIJudge, or LocalJudge.
 A claim is "supported" only if most of its content words appear in one source.
 """
 
-from orcaverify.judges.base import Judge, Verdict
+from orcaverify.judges.base import Judge, Score, Verdict
 
 _STOPWORDS = {"the", "a", "an", "is", "was", "of", "in", "to", "by", "and", "for", "on", "at"}
 
@@ -29,3 +29,13 @@ class StubJudge(Judge):
 
     def rewrite(self, output, failures):
         return output
+
+    def score(self, output, criteria):
+        crit, out = _content_words(criteria), _content_words(output)
+        value = round(len(crit & out) / len(crit), 2) if crit else 1.0
+        return Score(value=value, reason="word-overlap heuristic (stub)")
+
+    def contradicts(self, claim, sources):
+        if "not" in claim.lower().split():
+            return Verdict(supported=False, reason=f"negation detected (stub): {claim}")
+        return Verdict(supported=True)
