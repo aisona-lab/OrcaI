@@ -52,10 +52,29 @@ Why: every decision recorded. Seed of future audit trail.
 - Fake judge in tests. → tests fast, offline, free.
 - repair behind a flag. → safety over magic.
 
+## provenance (module 2 — the audit trail)
+Plugs in as a `sink`. Every decision becomes a record in a chain.
+
+**chain.py** — `content_hash` = SHA-256 of (seq + time + prev_hash + payload). `verify_records` re-walks the whole chain.
+Why: each record locks the one before it. Change one → its hash changes → chain breaks → we see it.
+
+**record.py** — one record: seq, time, prev_hash, content_hash, payload.
+Why: prev_hash = the hash of the record before. First record points to GENESIS (all zeros).
+
+**store.py** — where records live. `FileStore` (1 JSON per line), `InMemoryStore` (tests). ABC so Postgres/S3 later.
+Why: don't tie the logic to the disk.
+
+**ledger.py** — `Provenance`. `.write(result)` (sink), `.record(event)` (any event), `.verify()` (cheating?), `.export()` (give to auditor).
+Why: one object does logging + integrity check + export.
+
+How tamper is caught: edit a payload → content_hash no longer matches. Delete a record → seq jumps + prev_hash points to nothing. Both → `.verify().ok == False` with `broken_at`.
+
+Decision: hash chain only, no secret key. Tamper-EVIDENT (you see it changed), not tamper-PROOF. Simple, no key to lose. HMAC/Ed25519 = later if needed.
+
 ## run it
 ```
 pip install -e ".[dev,local]"
 pytest -q
 python examples/rag_grounding.py
 ```
-46 tests. Core 94–100% covered. The 0% files are the real SDK adapters (need network).
+59 tests. Core 94–100% covered. The 0% files are the real SDK adapters (need network).

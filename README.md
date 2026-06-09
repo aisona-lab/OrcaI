@@ -86,17 +86,35 @@ A chain, tried left to right: `"retry(2) -> repair -> escalate -> reject"`.
 
 Every run returns a JSON-serializable `VerifyResult` — input, which checks passed/failed and why, retries, and the final decision. Point a `FileSink` or `LoggerSink` at it and every verification is recorded.
 
+## Provenance — tamper-evident audit trail
+
+Plug `Provenance` in as the sink and every decision becomes a **hash-chained, append-only** record. Edit, delete, or reorder any record and `verify()` catches it — the audit trail a regulator actually wants to see.
+
+```python
+from orcaverify import Verifier, NoPII, Provenance
+
+prov = Verifier([NoPII()], sink=Provenance("audit.jsonl"))
+# ... run verifications ...
+
+prov.sink.verify()            # ChainResult(ok=True/False, broken_at=...)
+prov.sink.export("audit.json")  # full chain + integrity summary for an auditor
+prov.sink.record({"event": "data_access", "user": "mlro", "case": "42"})  # log any event
+```
+
+Storage is pluggable (`FileStore`, `InMemoryStore`, or your own `ProvenanceStore`). Integrity is plain SHA-256 hash chaining — no keys to manage.
+
 ## Run the demos (offline, no API key)
 
 ```bash
 python examples/rag_grounding.py      # catches an ungrounded claim
 python examples/aml_investigation.py  # schema + grounding + no-PII gate
+python examples/audit_trail.py        # tamper-evident provenance log
 ```
 
 ## Roadmap
 
-- **Provenance** — append-only, cryptographically verifiable, regulator-exportable audit trail.
 - More checks — toxicity/safety, faithfulness/consistency, rubric (LLM-judge scoring).
+- Provenance backends — Postgres/S3 stores; optional HMAC/Ed25519 signing.
 - Gateway mode — language-agnostic HTTP interception.
 - TypeScript port.
 
