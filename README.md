@@ -7,6 +7,7 @@
 A drop-in, framework-agnostic verification layer for LLM and agent outputs in Python.
 
 [![CI](https://github.com/aisona-lab/OrcaI/actions/workflows/ci.yml/badge.svg)](https://github.com/aisona-lab/OrcaI/actions)
+[![PyPI](https://img.shields.io/pypi/v/orca-verify)](https://pypi.org/project/orca-verify/)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -147,6 +148,12 @@ python examples/aml_investigation.py  # schema, grounding, and no-PII gate
 python examples/audit_trail.py        # tamper-evident provenance log
 python examples/quality_checks.py     # rubric scoring and faithfulness
 python examples/custom_check.py       # register a check and build from config
+```
+
+To see Orca wrap a real model call (grounding a live answer against sources), set a provider key:
+
+```bash
+ANTHROPIC_API_KEY=... python examples/with_llm.py   # or OPENAI_API_KEY
 ```
 
 ## Roadmap
