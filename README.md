@@ -6,7 +6,7 @@
 
 A drop-in, framework-agnostic verification layer for LLM and agent outputs in Python.
 
-[![CI](https://github.com/your-handle/OrcaI/actions/workflows/ci.yml/badge.svg)](https://github.com/your-handle/OrcaI/actions)
+[![CI](https://github.com/aisona-lab/OrcaI/actions/workflows/ci.yml/badge.svg)](https://github.com/aisona-lab/OrcaI/actions)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 

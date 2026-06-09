@@ -14,8 +14,8 @@ keywords = ["llm", "agents", "verification", "guardrails", "grounding", "ai", "r
 dependencies = ["pydantic>=2"]
 
 [project.urls]
-Homepage = "https://github.com/your-handle/OrcaI"
-Source = "https://github.com/your-handle/OrcaI"
+Homepage = "https://github.com/aisona-lab/OrcaI"
+Source = "https://github.com/aisona-lab/OrcaI"
 
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.39"]
