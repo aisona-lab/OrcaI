@@ -1,6 +1,6 @@
 <div align="center">
 
-# Orca
+# OrcaI 🫍
 
 **Your agent proposes. Orca verifies. You decide.**
 
