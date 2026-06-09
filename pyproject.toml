@@ -12,10 +12,22 @@ requires-python = ">=3.11"
 authors = [{ name = "Carlos" }]
 keywords = ["llm", "agents", "verification", "guardrails", "grounding", "ai", "rag"]
 dependencies = ["pydantic>=2"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
+]
 
 [project.urls]
 Homepage = "https://github.com/aisona-lab/OrcaI"
 Source = "https://github.com/aisona-lab/OrcaI"
+Issues = "https://github.com/aisona-lab/OrcaI/issues"
 
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.39"]
