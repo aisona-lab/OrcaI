@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🐋 Orca
+# Orca
 
 **Your agent proposes. Orca verifies. You decide.**
 
@@ -12,11 +12,11 @@ A drop-in, framework-agnostic verification layer for LLM and agent outputs in Py
 
 </div>
 
----
+## Why Orca
 
-Everyone ships AI agents. Almost everyone ships only the **happy path**: prompt → model → output → use it. Orca is the layer the ecosystem skips — the one that makes an output **trustworthy** before it leaves your system.
+Everyone ships AI agents. Almost everyone ships only the happy path: prompt, model, output, use it. Orca is the layer most projects skip, the one that makes an output trustworthy before it leaves your system.
 
-You declare *checks*. An output ships only if it passes. Otherwise Orca **retries** with feedback, optionally **repairs**, **escalates** to a human, or **rejects** — and records every decision.
+You declare *checks*. An output ships only if it passes. Otherwise Orca retries with feedback, optionally repairs, escalates to a human, or rejects, and it records every decision along the way.
 
 ```python
 from orcaverify import verify, Schema, Grounded, NoPII
@@ -31,22 +31,25 @@ def investigate(alert) -> Report:
     return agent.run(alert)               # your agent, any framework
 ```
 
-Pass → you get the value. Fail → Orca retries with the failure reasons as feedback, then escalates to a human. You never ship an unverified output by accident.
+On pass you get the value back. On failure Orca retries with the failure reasons as feedback, then escalates to a human. You never ship an unverified output by accident.
 
 ## Install
 
 ```bash
 pip install orca-verify
-# optional model backends for Grounded / repair:
-pip install "orca-verify[anthropic]"   # Claude
-pip install "orca-verify[openai]"      # OpenAI
-pip install "orca-verify[local]"       # Ollama / vLLM / LM Studio (on-prem, air-gapped)
 ```
 
-## The two concepts
+Optional model backends, used by `Grounded`, `Faithful`, `Rubric`, and repair:
 
-- **`Check`** — one isolated, testable unit of verification.
-- **`Verifier`** — runs a list of checks and applies an `on_fail` policy. `@verify` is sugar over it.
+```bash
+pip install "orca-verify[anthropic]"   # Claude
+pip install "orca-verify[openai]"      # OpenAI
+pip install "orca-verify[local]"       # Ollama, vLLM, LM Studio (on-prem, air-gapped)
+```
+
+## Two concepts
+
+A `Check` is one isolated, testable unit of verification. A `Verifier` runs a list of checks and applies an `on_fail` policy. The `@verify` decorator is sugar over `Verifier`.
 
 ```python
 from orcaverify import Verifier, Predicate
@@ -58,66 +61,39 @@ if not result.ok:
         print(f.reason)
 ```
 
-## Checks (v1)
+## Checks
 
 | Check | What it enforces |
 |---|---|
 | `Schema(Model)` | Output validates against a Pydantic model |
-| `Predicate(fn)` | Any custom rule — the universal escape hatch |
-| `Grounded(sources, judge)` | Every claim is supported by a retrieved source (cite or reject) |
-| `Faithful(sources, judge)` | No claim contradicts the sources (consistency, not just support) |
+| `Predicate(fn)` | Any custom rule, the universal escape hatch |
+| `Grounded(sources, judge)` | Every claim is supported by a retrieved source, cite or reject |
+| `Faithful(sources, judge)` | No claim contradicts the sources, consistency rather than support |
 | `Rubric(criteria, judge)` | LLM-as-judge scoring against named criteria, passes above a threshold |
-| `NoPII()` / `NoSecrets()` | Output doesn't leak personal data or credentials |
+| `NoPII()` / `NoSecrets()` | Output does not leak personal data or credentials |
 
 ## on_fail policy
 
-A chain, tried left to right: `"retry(2) -> repair -> escalate -> reject"`.
+A chain, tried left to right, for example `"retry(2) -> repair -> escalate -> reject"`.
 
 | Step | Behavior |
 |---|---|
 | `retry(n)` | Re-run the producer with the failure reasons injected as feedback |
-| `repair` | A judge rewrites the output to satisfy the failed checks *(opt-in; needs a judge)* |
+| `repair` | A judge rewrites the output to satisfy the failed checks (opt-in, needs a judge) |
 | `escalate` | Hand off to a human-in-the-loop callback |
-| `reject` | Return `ok=False` (or raise `VerificationError`) |
+| `reject` | Return `ok=False`, or raise `VerificationError` |
 
-## Judges (for Grounded & repair)
+## Judges
 
-`Grounded` and `repair` use a pluggable `Judge`. Ships with `AnthropicJudge`, `OpenAIJudge`, and `LocalJudge` (any OpenAI-compatible server + Ollama, so it runs fully **on-prem / air-gapped**). Or implement the two-method protocol yourself.
+`Grounded`, `Faithful`, `Rubric`, and repair use a pluggable `Judge`. Orca ships with `AnthropicJudge`, `OpenAIJudge`, and `LocalJudge`. `LocalJudge` targets any OpenAI-compatible server plus Ollama, so it runs fully on-prem or air-gapped. You can also implement the protocol yourself.
 
 ## Trace
 
-Every run returns a JSON-serializable `VerifyResult` — input, which checks passed/failed and why, retries, and the final decision. Point a `FileSink` or `LoggerSink` at it and every verification is recorded.
+Every run returns a JSON-serializable `VerifyResult`: the input, which checks passed or failed and why, the retries, and the final decision. Point a `FileSink` or `LoggerSink` at it and every verification is recorded.
 
-## Extend it — registry & plugins
+## Tamper-evident audit trail
 
-Register your own check, then compose verifiers from config. Built-in checks are registered under `schema`, `predicate`, `grounded`, `faithful`, `rubric`, `no_pii`, `no_secrets`.
-
-```python
-from orcaverify import Check, CheckResult, register, from_config
-
-@register("max_length")
-class MaxLength(Check):
-    def __init__(self, limit=280): self.limit = limit
-    def check(self, output, context=None):
-        n = len(str(output))
-        return CheckResult(ok=n <= self.limit, reason=None if n <= self.limit else f"too long: {n}")
-
-gate = from_config({
-    "checks": ["no_pii", {"max_length": {"limit": 280}}, "grounded"],
-    "on_fail": "retry(2) -> reject",
-}, judge=judge)   # judge is auto-injected into checks that need it
-```
-
-Ship checks in your own package and expose them via entry points — `load_plugins()` discovers and registers them automatically:
-
-```toml
-[project.entry-points."orcaverify.checks"]
-toxicity = "my_pkg.checks:Toxicity"
-```
-
-## Provenance — tamper-evident audit trail
-
-Plug `Provenance` in as the sink and every decision becomes a **hash-chained, append-only** record. Edit, delete, or reorder any record and `verify()` catches it — the audit trail a regulator actually wants to see.
+Plug `Provenance` in as the sink and every decision becomes a hash-chained, append-only record. Edit, delete, or reorder any record and `verify()` catches it. This is the audit trail a regulator actually wants to see.
 
 ```python
 from orcaverify import Verifier, NoPII, Provenance
@@ -125,32 +101,62 @@ from orcaverify import Verifier, NoPII, Provenance
 prov = Verifier([NoPII()], sink=Provenance("audit.jsonl"))
 # ... run verifications ...
 
-prov.sink.verify()            # ChainResult(ok=True/False, broken_at=...)
-prov.sink.export("audit.json")  # full chain + integrity summary for an auditor
-prov.sink.record({"event": "data_access", "user": "mlro", "case": "42"})  # log any event
+prov.sink.verify()                            # ChainResult(ok=True/False, broken_at=...)
+prov.sink.export("audit.json")                # full chain plus integrity summary
+prov.sink.record({"event": "data_access"})    # log any auditable event
 ```
 
-Storage is pluggable (`FileStore`, `InMemoryStore`, or your own `ProvenanceStore`). Integrity is plain SHA-256 hash chaining — no keys to manage.
+Storage is pluggable (`FileStore`, `InMemoryStore`, or your own `ProvenanceStore`). Integrity is plain SHA-256 hash chaining, with no keys to manage.
 
-## Run the demos (offline, no API key)
+## Extend it: registry and plugins
+
+Register your own check, then compose verifiers from config. Built-in checks are registered under `schema`, `predicate`, `grounded`, `faithful`, `rubric`, `no_pii`, and `no_secrets`.
+
+```python
+from orcaverify import Check, CheckResult, register, from_config
+
+@register("max_length")
+class MaxLength(Check):
+    def __init__(self, limit=280):
+        self.limit = limit
+
+    def check(self, output, context=None):
+        n = len(str(output))
+        return CheckResult(ok=n <= self.limit, reason=None if n <= self.limit else f"too long: {n}")
+
+gate = from_config({
+    "checks": ["no_pii", {"max_length": {"limit": 280}}, "grounded"],
+    "on_fail": "retry(2) -> reject",
+}, judge=judge)   # the judge is auto-injected into checks that need it
+```
+
+Ship checks in your own package and expose them through entry points. `load_plugins()` discovers and registers them automatically:
+
+```toml
+[project.entry-points."orcaverify.checks"]
+toxicity = "my_pkg.checks:Toxicity"
+```
+
+## Run the demos
+
+All demos run offline, with no API key.
 
 ```bash
 python examples/rag_grounding.py      # catches an ungrounded claim
-python examples/aml_investigation.py  # schema + grounding + no-PII gate
+python examples/aml_investigation.py  # schema, grounding, and no-PII gate
 python examples/audit_trail.py        # tamper-evident provenance log
-python examples/quality_checks.py     # rubric scoring + faithfulness
-python examples/custom_check.py        # register a check + build from config
+python examples/quality_checks.py     # rubric scoring and faithfulness
+python examples/custom_check.py       # register a check and build from config
 ```
 
 ## Roadmap
 
-- More checks — toxicity/safety, JSON-repair, custom check registry.
-- Provenance backends — Postgres/S3 stores; optional HMAC/Ed25519 signing.
-- TypeScript port.
-- Gateway mode — language-agnostic HTTP interception.
+- More checks: toxicity and safety, JSON repair.
+- Provenance backends: Postgres and S3 stores, optional HMAC or Ed25519 signing.
+- Gateway mode: language-agnostic HTTP interception.
 - TypeScript port.
 
-Contributions welcome — each check and judge is a small, isolated module.
+Contributions are welcome. Each check and judge is a small, isolated module.
 
 ## License
 
