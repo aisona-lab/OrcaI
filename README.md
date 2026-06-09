@@ -88,6 +88,33 @@ A chain, tried left to right: `"retry(2) -> repair -> escalate -> reject"`.
 
 Every run returns a JSON-serializable `VerifyResult` — input, which checks passed/failed and why, retries, and the final decision. Point a `FileSink` or `LoggerSink` at it and every verification is recorded.
 
+## Extend it — registry & plugins
+
+Register your own check, then compose verifiers from config. Built-in checks are registered under `schema`, `predicate`, `grounded`, `faithful`, `rubric`, `no_pii`, `no_secrets`.
+
+```python
+from orcaverify import Check, CheckResult, register, from_config
+
+@register("max_length")
+class MaxLength(Check):
+    def __init__(self, limit=280): self.limit = limit
+    def check(self, output, context=None):
+        n = len(str(output))
+        return CheckResult(ok=n <= self.limit, reason=None if n <= self.limit else f"too long: {n}")
+
+gate = from_config({
+    "checks": ["no_pii", {"max_length": {"limit": 280}}, "grounded"],
+    "on_fail": "retry(2) -> reject",
+}, judge=judge)   # judge is auto-injected into checks that need it
+```
+
+Ship checks in your own package and expose them via entry points — `load_plugins()` discovers and registers them automatically:
+
+```toml
+[project.entry-points."orcaverify.checks"]
+toxicity = "my_pkg.checks:Toxicity"
+```
+
 ## Provenance — tamper-evident audit trail
 
 Plug `Provenance` in as the sink and every decision becomes a **hash-chained, append-only** record. Edit, delete, or reorder any record and `verify()` catches it — the audit trail a regulator actually wants to see.
@@ -112,6 +139,7 @@ python examples/rag_grounding.py      # catches an ungrounded claim
 python examples/aml_investigation.py  # schema + grounding + no-PII gate
 python examples/audit_trail.py        # tamper-evident provenance log
 python examples/quality_checks.py     # rubric scoring + faithfulness
+python examples/custom_check.py        # register a check + build from config
 ```
 
 ## Roadmap

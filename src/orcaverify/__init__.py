@@ -17,6 +17,7 @@ from orcaverify.checks import (
 from orcaverify.core import VerificationError, Verifier, verify
 from orcaverify.policy import OnFail
 from orcaverify.provenance import FileStore, InMemoryStore, Provenance
+from orcaverify.registry import available, build_check, from_config, load_plugins, register
 from orcaverify.trace import Attempt, FileSink, LoggerSink, VerifyResult
 
 __version__ = "0.1.0"
@@ -42,4 +43,9 @@ __all__ = [
     "Provenance",
     "FileStore",
     "InMemoryStore",
+    "register",
+    "build_check",
+    "from_config",
+    "available",
+    "load_plugins",
 ]

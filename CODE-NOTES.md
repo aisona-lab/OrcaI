@@ -86,10 +86,23 @@ Why: different from Grounded. Grounded = "is it backed?". Faithful = "does it cl
 **judges/base.py** — added `score()` (parse leading float) and `contradicts()` (YES/NO).
 Why: keep one brain. Judge ABC stays minimal (entails+rewrite); these are concrete on PromptJudge so old/custom judges don't break.
 
+## registry (module 4 — make it a platform)
+
+**registry.py** — name → Check class map.
+- `register("name")` decorator or `register(name, cls)`.
+- `build_check(spec)` — spec = `"no_pii"` or `{"rubric": {args}}` or `{"name":..., "args":...}`.
+- `from_config({checks, on_fail}, judge)` — builds a whole Verifier. Auto-injects judge into checks whose `__init__` takes one (inspect).
+- `load_plugins()` — reads Python entry points group `orcaverify.checks`. Install a package → its checks appear. THIS is the community hook.
+- builtins auto-registered at import.
+
+Why: turns Orca from "my 6 checks" into "anyone's checks". Stars come from extensibility.
+Why judge injection by inspect: user writes `"grounded"` in config without wiring the judge by hand.
+Why entry points: zero-config plugins. `pip install orca-toxicity` and it just works.
+
 ## run it
 ```
 pip install -e ".[dev,local]"
 pytest -q
 python examples/rag_grounding.py
 ```
-74 tests. Core 94–100% covered. The 0% files are the real SDK adapters (need network).
+84 tests. Core 94–100% covered. The 0% files are the real SDK adapters (need network).
