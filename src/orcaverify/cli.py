@@ -56,7 +56,10 @@ def cmd_verify(args: argparse.Namespace) -> int:
     verifier = from_config(cfg, judge=None)
     output = read_output(args.output)
     result = verifier.check(output)
-    _print_table(verifier, result)
+    if args.json:
+        print(json.dumps(result.to_dict(), indent=2))
+    else:
+        _print_table(verifier, result)
     return 0 if result.ok else 1
 
 

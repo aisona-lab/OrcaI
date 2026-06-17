@@ -37,3 +37,12 @@ def test_verify_reads_stdin(tmp_path, capsys, monkeypatch):
     cfg = _write(tmp_path, "c.json", json.dumps({"checks": ["no_pii"]}))
     monkeypatch.setattr("sys.stdin", io.StringIO("clean text"))
     assert main(["verify", "-", "-c", cfg]) == 0
+
+
+def test_verify_json_output(tmp_path, capsys):
+    cfg = _write(tmp_path, "c.json", json.dumps({"checks": ["no_pii"]}))
+    out = _write(tmp_path, "o.txt", "clean text")
+    assert main(["verify", out, "-c", cfg, "--json"]) == 0
+    data = json.loads(capsys.readouterr().out)
+    assert data["ok"] is True
+    assert data["decision"] == "passed"
