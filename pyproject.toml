@@ -29,6 +29,9 @@ Homepage = "https://github.com/aisona-lab/OrcaI"
 Source = "https://github.com/aisona-lab/OrcaI"
 Issues = "https://github.com/aisona-lab/OrcaI/issues"
 
+[project.scripts]
+orca = "orcaverify.cli:main"
+
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.39"]
 openai = ["openai>=1.40"]
