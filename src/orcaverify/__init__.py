@@ -20,7 +20,7 @@ from orcaverify.provenance import FileStore, InMemoryStore, Provenance
 from orcaverify.registry import available, build_check, from_config, load_plugins, register
 from orcaverify.trace import Attempt, FileSink, LoggerSink, VerifyResult
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "verify",

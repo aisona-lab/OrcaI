@@ -138,6 +138,38 @@ Ship checks in your own package and expose them through entry points. `load_plug
 toxicity = "my_pkg.checks:Toxicity"
 ```
 
+## CLI
+
+Verify outputs and audit trails from the terminal, no Python required.
+
+```bash
+orca verify out.txt -c orca.json         # run a config of checks (exit 1 on failure)
+cat out.txt | orca verify - -c orca.json  # read the output from stdin
+orca verify out.txt -c rag.json --source kb/*.md   # grounding sources
+orca audit verify audit.jsonl            # prove a provenance chain is intact
+orca audit export audit.jsonl -o bundle.json
+orca checks                              # list available checks (* needs a judge)
+```
+
+Config is JSON out of the box; YAML works with the `[cli]` extra:
+
+```bash
+pip install "orca-verify[cli]"
+```
+
+```yaml
+# orca.yaml
+checks:
+  - no_pii
+  - grounded
+on_fail: reject
+```
+
+Checks that need a judge (`grounded`, `faithful`, `rubric`) pick up a provider
+automatically from `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `ORCA_JUDGE_BASE_URL`.
+Offline checks run with zero setup. Exit codes: `0` pass, `1` verification failed,
+`2` usage error.
+
 ## Run the demos
 
 All demos run offline, with no API key.
