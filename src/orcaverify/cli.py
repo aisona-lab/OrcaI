@@ -4,10 +4,15 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from orcaverify.provenance import Provenance
 from orcaverify.registry import _accepts, available, from_config, get, load_plugins
+
+if TYPE_CHECKING:
+    from orcaverify.judges.base import Judge
 
 
 class _Usage(Exception):
@@ -17,7 +22,7 @@ class _Usage(Exception):
 _JUDGE_HINT = "set ANTHROPIC_API_KEY, OPENAI_API_KEY, or ORCA_JUDGE_BASE_URL"
 
 
-def judge_from_env(env=None):
+def judge_from_env(env: Mapping[str, str] | None = None) -> Judge | None:
     """Build a judge from environment, or None. The only seam touching real SDKs."""
     env = os.environ if env is None else env
     if env.get("ANTHROPIC_API_KEY"):
@@ -48,11 +53,16 @@ def cmd_checks(args: argparse.Namespace) -> int:
 
 def load_config(path: str) -> dict:
     text = Path(path).read_text()
-    try:
-        if path.endswith((".yaml", ".yml")):
+    if path.endswith((".yaml", ".yml")):
+        try:
             import yaml  # optional [cli] extra
-
+        except ModuleNotFoundError as e:
+            raise _Usage("YAML config needs the [cli] extra: pip install 'orca-verify[cli]'") from e
+        try:
             return yaml.safe_load(text)
+        except yaml.YAMLError as e:
+            raise _Usage(f"invalid YAML config {path}: {e}") from e
+    try:
         return json.loads(text)
     except json.JSONDecodeError as e:
         raise _Usage(f"invalid JSON config {path}: {e}") from e
@@ -78,7 +88,11 @@ def _print_table(verifier, result) -> None:
 
 def cmd_verify(args: argparse.Namespace) -> int:
     cfg = load_config(args.config)
-    verifier = from_config(cfg, judge=judge_from_env())
+    load_plugins()  # so configs may reference third-party checks, same as `orca checks`
+    try:
+        verifier = from_config(cfg, judge=judge_from_env())
+    except KeyError as e:
+        raise _Usage(f"bad config: {e}") from e
     output = read_output(args.output)
     sources = [Path(p).read_text() for p in (args.source or [])]
     result = verifier.check(output, context=sources or None)
@@ -90,6 +104,8 @@ def cmd_verify(args: argparse.Namespace) -> int:
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
+    if not Path(args.ledger).exists():
+        raise _Usage(f"ledger not found: {args.ledger}")
     prov = Provenance(args.ledger)
     if args.audit_cmd == "verify":
         res = prov.verify()
@@ -138,7 +154,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     try:
         return args.func(args)

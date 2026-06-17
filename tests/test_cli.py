@@ -134,3 +134,30 @@ def test_audit_export_to_stdout(tmp_path, capsys):
     assert main(["audit", "export", str(led)]) == 0
     bundle = json.loads(capsys.readouterr().out)
     assert bundle["count"] == 2
+
+
+def test_verify_unknown_check_name(tmp_path, capsys):
+    cfg = _write(tmp_path, "c.json", json.dumps({"checks": ["nope_not_real"]}))
+    out = _write(tmp_path, "o.txt", "x")
+    assert main(["verify", out, "-c", cfg]) == 2
+    assert "bad config" in capsys.readouterr().err
+
+
+def test_verify_config_missing_checks_key(tmp_path, capsys):
+    cfg = _write(tmp_path, "c.json", json.dumps({"on_fail": "reject"}))
+    out = _write(tmp_path, "o.txt", "x")
+    assert main(["verify", out, "-c", cfg]) == 2
+    assert "bad config" in capsys.readouterr().err
+
+
+def test_verify_malformed_yaml(tmp_path, capsys):
+    pytest.importorskip("yaml")
+    cfg = _write(tmp_path, "c.yaml", "checks: [unclosed\n")
+    out = _write(tmp_path, "o.txt", "x")
+    assert main(["verify", out, "-c", cfg]) == 2
+    assert "invalid YAML config" in capsys.readouterr().err
+
+
+def test_audit_missing_ledger(tmp_path, capsys):
+    assert main(["audit", "verify", str(tmp_path / "nope.jsonl")]) == 2
+    assert "ledger not found" in capsys.readouterr().err
