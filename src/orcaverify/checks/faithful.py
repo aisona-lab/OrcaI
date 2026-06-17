@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from orcaverify.checks._text import claims, resolve_sources
+from orcaverify.checks._text import claims, failing, resolve_sources
 from orcaverify.checks.base import Check, CheckResult
 
 
@@ -26,9 +26,9 @@ class Faithful(Check):
             raise ValueError("Faithful requires a judge that supports contradicts()")
         sources = resolve_sources(self.sources, context)
         text = self.extract(output) if self.extract else output
-        contradicting = [
-            claim for claim in claims(text) if not self.judge.contradicts(claim, sources).supported
-        ]
+        contradicting = failing(
+            claims(text), lambda c: not self.judge.contradicts(c, sources).supported
+        )
         if contradicting:
             return CheckResult(
                 ok=False,

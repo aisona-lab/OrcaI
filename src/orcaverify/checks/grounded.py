@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from orcaverify.checks._text import claims, resolve_sources
+from orcaverify.checks._text import claims, failing, resolve_sources
 from orcaverify.checks.base import Check, CheckResult
 
 
@@ -25,9 +25,7 @@ class Grounded(Check):
             raise ValueError("Grounded requires a judge (got None)")
         sources = resolve_sources(self.sources, context)
         text = self.extract(output) if self.extract else output
-        unsupported = [
-            claim for claim in claims(text) if not self.judge.entails(claim, sources).supported
-        ]
+        unsupported = failing(claims(text), lambda c: not self.judge.entails(c, sources).supported)
         if unsupported:
             return CheckResult(
                 ok=False,
