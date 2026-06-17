@@ -6,6 +6,7 @@ import os
 import sys
 from pathlib import Path
 
+from orcaverify.provenance import Provenance
 from orcaverify.registry import _accepts, available, from_config, get, load_plugins
 
 
@@ -88,6 +89,32 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def cmd_audit(args: argparse.Namespace) -> int:
+    prov = Provenance(args.ledger)
+    if args.audit_cmd == "verify":
+        res = prov.verify()
+        if res.ok:
+            print(f"  ✓ chain intact ({len(prov.records())} records)")
+            return 0
+        print(f"  ✗ chain broken at seq {res.broken_at}")
+        return 1
+    # export
+    if args.out:
+        bundle = prov.export(args.out)
+        print(f"  exported {bundle['count']} records to {args.out}")
+    else:
+        res = prov.verify()
+        records = prov.records()
+        bundle = {
+            "verified": res.ok,
+            "count": len(records),
+            "broken_at": res.broken_at,
+            "records": records,
+        }
+        print(json.dumps(bundle, indent=2))
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="orca", description="Verify LLM/agent outputs.")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -101,6 +128,12 @@ def _build_parser() -> argparse.ArgumentParser:
     v.add_argument("--source", nargs="*", help="source files for grounding")
     v.add_argument("--json", action="store_true", help="emit JSON result")
     v.set_defaults(func=cmd_verify)
+
+    a = sub.add_parser("audit", help="verify or export a provenance chain")
+    a.add_argument("audit_cmd", choices=["verify", "export"])
+    a.add_argument("ledger", help="provenance ledger file (.jsonl)")
+    a.add_argument("-o", "--out", help="export output path (export only)")
+    a.set_defaults(func=cmd_audit)
 
     return p
 

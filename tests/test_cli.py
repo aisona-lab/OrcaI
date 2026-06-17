@@ -3,6 +3,7 @@ import json
 
 import pytest
 
+from orcaverify import Provenance
 from orcaverify.cli import main
 from orcaverify.judges.base import Verdict
 
@@ -93,3 +94,43 @@ def test_verify_yaml_config(tmp_path, capsys):
     cfg = _write(tmp_path, "c.yaml", "checks:\n  - no_pii\non_fail: reject\n")
     out = _write(tmp_path, "o.txt", "clean")
     assert main(["verify", out, "-c", cfg]) == 0
+
+
+def _ledger_with_two(tmp_path):
+    led = tmp_path / "audit.jsonl"
+    prov = Provenance(str(led))
+    prov.record({"event": "x"})
+    prov.record({"event": "y"})
+    return led
+
+
+def test_audit_verify_intact(tmp_path, capsys):
+    led = _ledger_with_two(tmp_path)
+    assert main(["audit", "verify", str(led)]) == 0
+    assert "intact" in capsys.readouterr().out
+
+
+def test_audit_verify_tampered(tmp_path, capsys):
+    led = _ledger_with_two(tmp_path)
+    lines = led.read_text().splitlines()
+    rec = json.loads(lines[0])
+    rec["payload"] = {"event": "TAMPERED"}
+    lines[0] = json.dumps(rec)
+    led.write_text("\n".join(lines) + "\n")
+    assert main(["audit", "verify", str(led)]) == 1
+    assert "broken" in capsys.readouterr().out
+
+
+def test_audit_export_to_file(tmp_path):
+    led = _ledger_with_two(tmp_path)
+    out = tmp_path / "bundle.json"
+    assert main(["audit", "export", str(led), "-o", str(out)]) == 0
+    bundle = json.loads(out.read_text())
+    assert bundle["count"] == 2 and bundle["verified"] is True
+
+
+def test_audit_export_to_stdout(tmp_path, capsys):
+    led = _ledger_with_two(tmp_path)
+    assert main(["audit", "export", str(led)]) == 0
+    bundle = json.loads(capsys.readouterr().out)
+    assert bundle["count"] == 2
