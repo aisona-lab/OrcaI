@@ -1,6 +1,8 @@
 import io
 import json
 
+import pytest
+
 from orcaverify.cli import main
 from orcaverify.judges.base import Verdict
 
@@ -71,3 +73,23 @@ def test_verify_judge_required_but_missing(tmp_path, capsys, monkeypatch):
     out = _write(tmp_path, "o.txt", "anything")
     assert main(["verify", out, "-c", cfg, "--source", out]) == 2
     assert "requires a judge" in capsys.readouterr().err
+
+
+def test_verify_bad_json_config(tmp_path, capsys):
+    cfg = _write(tmp_path, "c.json", "{not valid json")
+    out = _write(tmp_path, "o.txt", "x")
+    assert main(["verify", out, "-c", cfg]) == 2
+    assert "invalid JSON config" in capsys.readouterr().err
+
+
+def test_verify_missing_config_file(tmp_path, capsys):
+    out = _write(tmp_path, "o.txt", "x")
+    assert main(["verify", out, "-c", str(tmp_path / "nope.json")]) == 2
+    assert "file not found" in capsys.readouterr().err
+
+
+def test_verify_yaml_config(tmp_path, capsys):
+    pytest.importorskip("yaml")
+    cfg = _write(tmp_path, "c.yaml", "checks:\n  - no_pii\non_fail: reject\n")
+    out = _write(tmp_path, "o.txt", "clean")
+    assert main(["verify", out, "-c", cfg]) == 0
