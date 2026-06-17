@@ -14,6 +14,9 @@ def claims(text) -> list[str]:
     return [s.strip() for s in re.split(r"(?<=[.!?])\s+", str(text).strip()) if s.strip()]
 
 
+# ponytail: private on purpose — keeps the pool/signature free to change.
+# Export from orcaverify.checks (+ __all__) when a real plugin does per-claim
+# judging and needs the fan-out; until then it's speculative API surface.
 def failing(items: list[str], is_bad: Callable[[str], bool]) -> list[str]:
     """Return items where `is_bad(item)` holds, in order, evaluating concurrently.
 
