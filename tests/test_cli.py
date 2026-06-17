@@ -2,6 +2,7 @@ import io
 import json
 
 from orcaverify.cli import main
+from orcaverify.judges.base import Verdict
 
 
 def _write(tmp_path, name, content):
@@ -46,3 +47,27 @@ def test_verify_json_output(tmp_path, capsys):
     data = json.loads(capsys.readouterr().out)
     assert data["ok"] is True
     assert data["decision"] == "passed"
+
+
+class _FakeJudge:
+    """Offline double: claim supported iff its text appears in a source."""
+
+    def entails(self, claim, sources):
+        ok = any(claim.lower().rstrip(".") in s.lower() for s in sources)
+        return Verdict(supported=ok, reason=None if ok else f"unsupported: {claim}")
+
+
+def test_verify_grounded_with_sources(tmp_path, capsys, monkeypatch):
+    monkeypatch.setattr("orcaverify.cli.judge_from_env", lambda: _FakeJudge())
+    cfg = _write(tmp_path, "c.json", json.dumps({"checks": ["grounded"]}))
+    out = _write(tmp_path, "o.txt", "The sky is blue")
+    src = _write(tmp_path, "s.txt", "The sky is blue and vast")
+    assert main(["verify", out, "-c", cfg, "--source", src]) == 0
+
+
+def test_verify_judge_required_but_missing(tmp_path, capsys, monkeypatch):
+    monkeypatch.setattr("orcaverify.cli.judge_from_env", lambda: None)
+    cfg = _write(tmp_path, "c.json", json.dumps({"checks": ["grounded"]}))
+    out = _write(tmp_path, "o.txt", "anything")
+    assert main(["verify", out, "-c", cfg, "--source", out]) == 2
+    assert "requires a judge" in capsys.readouterr().err
