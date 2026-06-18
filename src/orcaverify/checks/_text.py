@@ -9,9 +9,48 @@ from concurrent.futures import ThreadPoolExecutor
 _MAX_WORKERS = 8
 
 
+# ponytail: hand-picked abbreviations, not a real sentence tokenizer. Covers the
+# common offenders that make naive splitting produce a bare "Dr." claim. Swap for
+# a tokenizer (pysbd/nltk) only if the eval shows it's worth the dependency.
+_ABBREV = {
+    "dr",
+    "mr",
+    "mrs",
+    "ms",
+    "prof",
+    "sr",
+    "jr",
+    "st",
+    "vs",
+    "etc",
+    "e.g",
+    "i.e",
+    "u.s",
+    "u.k",
+    "inc",
+    "ltd",
+}
+
+
+def _ends_with_abbrev(piece: str) -> bool:
+    words = piece.split()
+    return bool(words) and words[-1].rstrip(".").lower() in _ABBREV
+
+
 def claims(text) -> list[str]:
-    """Split text into claims, one per sentence (v1 extraction)."""
-    return [s.strip() for s in re.split(r"(?<=[.!?])\s+", str(text).strip()) if s.strip()]
+    """Split text into claims, one per sentence (v1 extraction).
+
+    Naive sentence splitting would break "Dr. Smith ..." into a bare "Dr." claim;
+    we rejoin a fragment onto the next when it ends in a known abbreviation.
+    """
+    parts = [s.strip() for s in re.split(r"(?<=[.!?])\s+", str(text).strip()) if s.strip()]
+    out: list[str] = []
+    for part in parts:
+        if out and _ends_with_abbrev(out[-1]):
+            out[-1] = f"{out[-1]} {part}"
+        else:
+            out.append(part)
+    return out
 
 
 # ponytail: private on purpose — keeps the pool/signature free to change.
