@@ -188,6 +188,22 @@ To see Orca wrap a real model call (grounding a live answer against sources), se
 ANTHROPIC_API_KEY=... python examples/with_llm.py   # or OPENAI_API_KEY
 ```
 
+## Evaluation
+
+The judge-backed checks are only as trustworthy as their precision and recall.
+`eval/` holds a small hand-labeled dataset and a runner that measures both,
+treating "the check flags a problem" as the positive class, so **recall is the
+fraction of bad outputs caught** and **precision is the false-alarm rate**.
+
+```bash
+ANTHROPIC_API_KEY=... python eval/run.py   # or OPENAI_API_KEY / ORCA_JUDGE_BASE_URL
+python eval/run.py --fake                   # offline smoke test (not a real verdict)
+```
+
+It prints per-check precision/recall/F1 plus the exact misses and false alarms,
+so changes to claim extraction or judge prompts can be judged by the numbers,
+not by feel. Add cases to `eval/dataset.jsonl` as new failure modes show up.
+
 ## Roadmap
 
 - More checks: toxicity and safety, JSON repair.

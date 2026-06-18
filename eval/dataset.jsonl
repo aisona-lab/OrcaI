@@ -1,0 +1,28 @@
+{"id": "g01", "check": "grounded", "text": "The Eiffel Tower is in Paris.", "sources": ["The Eiffel Tower is located in Paris, France."], "expect_ok": true}
+{"id": "g02", "check": "grounded", "text": "Water boils at 100 degrees Celsius at sea level.", "sources": ["At sea level, water reaches its boiling point at 100°C."], "expect_ok": true}
+{"id": "g03", "check": "grounded", "text": "The company was founded in 1998 and is based in California.", "sources": ["Acme was founded in 1998.", "Acme's headquarters are in California."], "expect_ok": true}
+{"id": "g04", "check": "grounded", "text": "Revenue grew by 12% last year.", "sources": ["Last year revenue increased 12% year over year."], "expect_ok": true}
+{"id": "g05", "check": "grounded", "text": "Mount Everest is the tallest mountain on Earth.", "sources": ["Mount Everest, at 8,849m, is Earth's highest mountain above sea level."], "expect_ok": true}
+{"id": "g06", "check": "grounded", "text": "Python is a programming language.", "sources": ["Python is a high-level, general-purpose programming language."], "expect_ok": true}
+{"id": "g07", "check": "grounded", "text": "The vaccine requires two doses.", "sources": ["The vaccine is administered in a two-dose schedule."], "expect_ok": true}
+{"id": "g08", "check": "grounded", "text": "The report recommends increasing the budget.", "sources": ["The report's main recommendation is to increase the annual budget by 10%."], "expect_ok": true}
+{"id": "g09", "check": "grounded", "text": "The product has won three industry awards.", "sources": ["The product launched in 2021 and has a 4-star user rating."], "expect_ok": false}
+{"id": "g10", "check": "grounded", "text": "The study included 500 participants.", "sources": ["The study included 50 participants over six months."], "expect_ok": false}
+{"id": "g11", "check": "grounded", "text": "The CEO previously worked at Google.", "sources": ["The CEO has 20 years of experience in the technology industry."], "expect_ok": false}
+{"id": "g12", "check": "grounded", "text": "The drug cures the disease.", "sources": ["The drug reduced symptoms in 30% of patients during a clinical trial."], "expect_ok": false}
+{"id": "g13", "check": "grounded", "text": "The treaty was signed in 1919.", "sources": ["The treaty negotiations concluded in 1918."], "expect_ok": false}
+{"id": "g14", "check": "grounded", "text": "The bridge is 2 km long.", "sources": ["The bridge spans the river and opened to traffic in 2005."], "expect_ok": false}
+{"id": "g15", "check": "grounded", "text": "The museum is open on Mondays.", "sources": ["The museum is open Tuesday through Sunday."], "expect_ok": false}
+{"id": "g16", "check": "grounded", "text": "Sales declined in the third quarter.", "sources": ["Sales rose steadily through the third quarter."], "expect_ok": false}
+{"id": "f01", "check": "faithful", "text": "The sky appeared blue.", "sources": ["The sky was a clear blue that afternoon."], "expect_ok": true}
+{"id": "f02", "check": "faithful", "text": "The meeting is scheduled for Monday.", "sources": ["The team agreed to meet on Monday."], "expect_ok": true}
+{"id": "f03", "check": "faithful", "text": "The car is red.", "sources": ["The car is a red sedan made in 2020."], "expect_ok": true}
+{"id": "f04", "check": "faithful", "text": "Profits increased.", "sources": ["The firm reported higher profits this quarter."], "expect_ok": true}
+{"id": "f05", "check": "faithful", "text": "The patient is an adult.", "sources": ["The patient is 45 years old."], "expect_ok": true}
+{"id": "f06", "check": "faithful", "text": "The flight departs in the morning.", "sources": ["Departure is scheduled for 8:00 AM."], "expect_ok": true}
+{"id": "f07", "check": "faithful", "text": "The sky was not blue.", "sources": ["The sky was a clear blue that afternoon."], "expect_ok": false}
+{"id": "f08", "check": "faithful", "text": "The meeting is on Friday.", "sources": ["The team agreed to meet on Monday."], "expect_ok": false}
+{"id": "f09", "check": "faithful", "text": "The car is blue.", "sources": ["The car is a red sedan made in 2020."], "expect_ok": false}
+{"id": "f10", "check": "faithful", "text": "Profits fell sharply.", "sources": ["The firm reported higher profits this quarter."], "expect_ok": false}
+{"id": "f11", "check": "faithful", "text": "The patient is a minor.", "sources": ["The patient is 45 years old."], "expect_ok": false}
+{"id": "f12", "check": "faithful", "text": "The flight departs at night.", "sources": ["Departure is scheduled for 8:00 AM."], "expect_ok": false}
